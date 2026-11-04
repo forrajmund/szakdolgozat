@@ -5,9 +5,6 @@ import plotly.graph_objects as go
 import yfinance as yf
 
 
-# ==========================================
-# 1. OLDAL BEÁLLÍTÁSAI ÉS STÍLUS
-# ==========================================
 st.set_page_config(
     page_title="ICT Backtester | Szakdolgozat", 
     page_icon="📈", 
@@ -19,7 +16,6 @@ if 'visited' not in st.session_state:
     st.session_state['visited'] = False
 
 if not st.session_state['visited']:
-    # Fejléc dizájnosan középre igazítva
     if not st.session_state['visited']:
         st.markdown("<h1 style='text-align: center;'>🏛️ Algoritmikus Kereskedési és Backtesting Keretrendszer</h1>", unsafe_allow_html=True)
         st.markdown("<h3 style='text-align: center;'>👋 Üdvözöllek a Szimulációs Weboldalamon!</h3>", unsafe_allow_html=True)
@@ -27,7 +23,6 @@ if not st.session_state['visited']:
     
     st.divider()
     
-    # Részletes, laikusbarát leírás
     st.markdown("""
     ### 📌 Miről szól ez a weboldal?
     Ez a felület egy **automatizált tőzsdei szimulátor**, amely azt hivatott bemutatni, hogyan teljesítene egy előre beprogramozott kereskedési stratégia a múltbeli és aktuális piaci adatokon. A rendszer a professzionális **ICT (Inner Circle Trader)** elméletekre épülő logikát alkalmazza, és teljesen automatikusan azonosítja a lehetséges vételi (Long) és eladási (Short) pontokat.
@@ -35,7 +30,7 @@ if not st.session_state['visited']:
     A cél a laikusok számára is érthetővé tenni a **"backtesting" (visszatesztelés)** folyamatát: megmutatni, hogy egy szigorú matematikai és logikai szabályrendszer alapján működő algoritmus milyen hozamot és kockázatot produkált volna egy adott történelmi időszak alatt, emberi beavatkozás nélkül.
     """)
     
-    # Funkciók kiemelt, formázott dobozban
+
     st.info("""
     **🛠️ Útmutató a felülethez (Mi mit csinál?)**
     
@@ -47,7 +42,6 @@ if not st.session_state['visited']:
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Piros, nagybetűs jogi nyilatkozat
     st.error("""
     **🚨 JOGI ÉS KOCKÁZATI FIGYELMEZTETÉS**
     
@@ -58,7 +52,6 @@ if not st.session_state['visited']:
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Gomb középre igazítása oszlopokkal a szebb dizájn érdekében
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         if st.button("Tudomásul vettem / Tovább a szimulációhoz", use_container_width=True, type="primary"):
@@ -68,10 +61,8 @@ if not st.session_state['visited']:
     st.stop()
 
     
-    st.success("Élő Piaci Szignál: Aktív (Vizuális mód)") # Ide jöhet a te szignál kiírató logikád
-# ==========================================
-# 2. ÜZLETI LOGIKA (OSZTÁLYOK)
-# ==========================================
+    st.success("Élő Piaci Szignál: Aktív (Vizuális mód)") 
+
 class ICTStrategy:
     def __init__(self, data):
         self.data = data.copy()
@@ -102,9 +93,6 @@ class Portfolio:
         self.data['Equity'] = self.initial_capital + self.data['PnL'].cumsum()
         return self.data
 
-# ==========================================
-# 3. ADATLETÖLTÉS (Gyorsítótárazva - Caching)
-# ==========================================
 @st.cache_data(show_spinner=False)
 def load_and_prepare_data(ticker):
     df = yf.download(ticker, interval="1h", period="1y")
@@ -114,7 +102,6 @@ def load_and_prepare_data(ticker):
         df.index = df.index.tz_localize(None)
     df.dropna(inplace=True)
     
-    # Indikátorok számolása
     df['Typical_Price'] = (df['High'] + df['Low'] + df['Close']) / 3
     daily_groups = df.groupby(df.index.date)
     df['Cum_Vol'] = daily_groups['Volume'].cumsum()
@@ -140,58 +127,46 @@ def load_and_prepare_data(ticker):
     df['Sweep_Bearish'] = (df['High'] > df['Asian_High']) & (df['Close'] < df['Asian_High']) & (df['Open'] < df['Asian_High'])
     return df
 
-# ==========================================
-# 4. WEBOLDAL FELÜLET (UI)
-# ==========================================
-# Két oszlop a fejlécnek: balra megy a cím, jobbra tartjuk a helyet a gombnak
 col_title, col_dict = st.columns([5, 1])
 
 with col_title:
     st.title("🏛️ Algoritmikus Kereskedési és Backtesting Keretrendszer")
     st.markdown("Szakdolgozati demonstrációs szoftver | **ICT (Inner Circle Trader) koncepciók validálása határidős piacokon**")
 
-dict_placeholder = col_dict.empty() # Ez a láthatatlan doboz foglalja le a helyet a jobb felső sarokban!
+dict_placeholder = col_dict.empty() 
 
 st.divider()
 
-# Oldalsáv (Sidebar)
 st.sidebar.header("⚙️ Szimulációs Paraméterek")
-# A felhasználó csak egy érthető, nem átírható szöveget lát:
 st.sidebar.text_input("Kereskedett Eszköz", value="Micro Nasdaq-100 (Tőzsdei Index)", disabled=True)
 
-# A háttérkód és a Yahoo Finance lekérés számára fixen megadjuk a tikert:
 ticker = "MNQ=F"
 kezdoto = st.sidebar.number_input("Kezdőtőke (USD)", min_value=1000.0, value=10000.0, step=1000.0)
 
 quantity = st.sidebar.number_input("Kontraktus mennyiség (db)", min_value=1, value=10, step=1)
 point_value = st.sidebar.number_input("Pontérték (MNQ = 2 USD/pont)", value=2.0, disabled=True)
-# A jutalék/csúszás bemenetet innen teljesen töröltük!
 
 if st.sidebar.button("🚀 Szimuláció Futtatása", type="primary"):
     with st.spinner('Adatelemzés és stratégia validálása folyamatban...'):
         
-        df = load_and_prepare_data(ticker) # Ha itt van idősík paramétered, hagyd meg
+        df = load_and_prepare_data(ticker) 
         strategy = ICTStrategy(df)
         df_signals = strategy.generate_signals()
         
-        # A teljes dollárszorzó
+        
         total_multiplier = quantity * point_value
         
-        # JAVÍTVA: A 'multiplier' helyett 'total_multiplier', a 'commission' pedig fix 0
         portfolio = Portfolio(df_signals, initial_capital=kezdoto, contract_multiplier=total_multiplier, commission=0)
         df_portfolio = portfolio.simulate_trades()
         
-        # Adatok feldolgozása
         df = load_and_prepare_data(ticker)
         
-        # Stratégia és Portfólió futtatása
         strategy = ICTStrategy(df)
         df_signals = strategy.generate_signals()
         
         portfolio = Portfolio(df_signals, initial_capital=kezdoto, contract_multiplier=total_multiplier, commission=0)
         df_portfolio = portfolio.simulate_trades()
         
-        # Statisztikák számolása
         df_portfolio['Trade_ID'] = df_portfolio['Trade_Executed'].cumsum()
         active_trades = df_portfolio[df_portfolio['Position'] != 0]
         trade_results = active_trades.groupby('Trade_ID')['PnL'].sum()
@@ -246,7 +221,6 @@ if st.sidebar.button("🚀 Szimuláció Futtatása", type="primary"):
         daily_returns = daily_equity.pct_change().dropna()
         sharpe_ratio = (daily_returns.mean() / daily_returns.std()) * np.sqrt(252) if len(daily_returns) > 1 else 0
 
-        # --- EREDMÉNYEK MEGJELENÍTÉSE (KPI Kártyák) ---
         col1, col2, col3, col4, col5 = st.columns(5)
         col1.metric("Záró Egyenleg", f"${final_equity:,.2f}", f"{roi:.2f}% Hozam")
         col2.metric("Nettó Profit", f"${net_profit:,.2f}")
@@ -256,7 +230,6 @@ if st.sidebar.button("🚀 Szimuláció Futtatása", type="primary"):
         
         st.divider()
 
-        # --- FÜLES ELRENDEZÉS (TABS) ---
         tab1, tab2, tab3, tab4, tab5 = st.tabs([
             "📊 Grafikonok és Árfolyam", 
             "📉 Visszaesés (Drawdown)", 
@@ -270,7 +243,6 @@ if st.sidebar.button("🚀 Szimuláció Futtatása", type="primary"):
             
             fig = go.Figure()
             
-            # Gyertyatartó grafikon TradingView stílusú színekkel
             fig.add_trace(go.Candlestick(
                 x=df_portfolio.index, 
                 open=df_portfolio['Open'], 
@@ -278,11 +250,11 @@ if st.sidebar.button("🚀 Szimuláció Futtatása", type="primary"):
                 low=df_portfolio['Low'], 
                 close=df_portfolio['Close'], 
                 name='Árfolyam',
-                increasing_line_color='#089981', # Határozott TradingView zöld
-                decreasing_line_color='#f23645'  # Határozott TradingView piros
+                increasing_line_color='#089981', 
+                decreasing_line_color='#f23645'  
             ))
             
-            # Vételi jelek (Long)
+            
             buy_signals = df_portfolio[df_portfolio['Signal'] == 1]
             fig.add_trace(go.Scatter(
                 x=buy_signals.index, y=buy_signals['Low'] - 20, 
@@ -290,7 +262,7 @@ if st.sidebar.button("🚀 Szimuláció Futtatása", type="primary"):
                 name='Vétel (Long)'
             ))
             
-            # Eladási jelek (Short)
+            
             sell_signals = df_portfolio[df_portfolio['Signal'] == -1]
             fig.add_trace(go.Scatter(
                 x=sell_signals.index, y=sell_signals['High'] + 20, 
@@ -299,11 +271,10 @@ if st.sidebar.button("🚀 Szimuláció Futtatása", type="primary"):
             ))
             
         
-            # Új elrendezés: Letisztult TradingView stílusú címke, gombok nélkül
             fig.update_layout(
                 height=700,
                 xaxis_rangeslider_visible=False,
-                margin=dict(l=10, r=10, t=40, b=10), # Felső margó visszavétele, mivel nincsenek gombok
+                margin=dict(l=10, r=10, t=40, b=10), 
                 yaxis=dict(
                     tickformat=".0f",
                     side="right",
@@ -311,7 +282,7 @@ if st.sidebar.button("🚀 Szimuláció Futtatása", type="primary"):
                 ),
                 xaxis=dict(
                     type="date",
-                    rangebreaks=[dict(bounds=["sat", "mon"])] # Hétvégék (üresjáratok) elrejtése a folyamatos idővonalhoz
+                    rangebreaks=[dict(bounds=["sat", "mon"])] 
                 ),
                 annotations=[
                     dict(
@@ -345,17 +316,14 @@ if st.sidebar.button("🚀 Szimuláció Futtatása", type="primary"):
             entry_price = 0.0
             position_side = 0
             
-            # Kigyűjtjük azokat a pontokat, ahol tranzakció történt
             executed_trades = df_portfolio[df_portfolio['Trade_Executed'] == True]
             
             for time, row in executed_trades.iterrows():
                 current_pos = row['Position']
                 
-                # ZÁRÁS: Ha volt nyitott pozíciónk és most bezárjuk (vagy fordul az irány)
                 if position_side != 0 and current_pos != position_side:
-                    exit_price = row['Open'] # A kilépés mindig az adott gyertya nyitóárán történik
+                    exit_price = row['Open'] 
                     
-                    # A jutalék (- commission) levonását töröltük, és bekerült a total_multiplier
                     trade_pnl = (exit_price - entry_price) * position_side * total_multiplier
                     
                     trades.append({
@@ -369,21 +337,18 @@ if st.sidebar.button("🚀 Szimuláció Futtatása", type="primary"):
                         'Net P&L': trade_pnl
                     })
                     
-                    position_side = 0 # Pozíció nullázása a zárás után
+                    position_side = 0 
                     
-                # NYITÁS: Ha nincs nyitott pozíció, és az új nem nulla, akkor belépünk
                 if position_side == 0 and current_pos != 0:
                     position_side = current_pos
                     entry_time = time
                     entry_price = row['Open']
 
-            # Táblázat (DataFrame) létrehozása a formázott adatokból
             df_trades = pd.DataFrame(trades)
             
             if not df_trades.empty:
                 st.write(f"**Összes lezárt kötés:** {len(df_trades)} db")
                 
-                # Egyedi színezés a P&L és a Side oszlopokhoz (Zöld/Piros)
                 def style_logic(val):
                     if isinstance(val, (int, float)):
                         return 'color: #00fa9a;' if val > 0 else ('color: #ff4b4b;' if val < 0 else '')
@@ -399,7 +364,6 @@ if st.sidebar.button("🚀 Szimuláció Futtatása", type="primary"):
                     'Net P&L': '${:.2f}'
                 }).map(style_logic, subset=['Net P&L', 'Side'])
                 
-                # Megjelenítés sorszámok (index) elrejtésével
                 st.dataframe(styled_df, use_container_width=True, hide_index=True)
             else:
                 st.info("Nincs megjeleníthető lezárt tranzakció.")
@@ -418,7 +382,6 @@ if st.sidebar.button("🚀 Szimuláció Futtatása", type="primary"):
             st.markdown("### 🔍 A Belépési Szignál Felépítése (Lépésről Lépésre)")
             st.markdown("Az algoritmus egy szigorú, 3 lépcsős feltételrendszert vizsgál. Az alábbiakban egy **Long (Vételi)** pozíció kialakulását szemléltetjük.")
             
-            # Vizuális szemléltetés (ASCII Art / Folyamatábra) a Streamlit kódblokkjával
             st.code(r"""
       [3] CHoCH (Market Structure Shift)
              /|        
@@ -434,7 +397,6 @@ if st.sidebar.button("🚀 Szimuláció Futtatása", type="primary"):
      [1]       Sweep (Likviditás begyűjtés)
             """, language="text")
 
-            # Háromoszlopos elrendezés a lépések részletes magyarázatához
             col1, col2, col3 = st.columns(3)
             
             with col1:
@@ -474,7 +436,6 @@ if st.sidebar.button("🚀 Szimuláció Futtatása", type="primary"):
 
             st.divider()
             
-            # Lenyitható panel a matematikai képleteknek
             with st.expander("🧮 Matematikai háttér: A VWAP (Volume Weighted Average Price) számítása"):
                 st.markdown("Az algoritmus napi szinten újrainduló (Anchored) VWAP-ot használ, az alábbi képlet alapján:")
                 st.latex(r"""VWAP = \frac{\sum_{i=1}^{n} (P_i \times V_i)}{\sum_{i=1}^{n} V_i}""")
@@ -488,23 +449,18 @@ if st.sidebar.button("🚀 Szimuláció Futtatása", type="primary"):
             st.subheader("🔴 Valós Idejű Piaci Figyelő")
             st.markdown("Az algoritmus a legutolsó letöltött gyertya alapján elemzi a jelenlegi piaci állapotot.")
             
-            # A legutolsó sor (legfrissebb adat) kinyerése a DataFrame-ből
             last_candle = df_portfolio.iloc[-1]
-            # Időzóna konvertálása magyar időre (New York -> Budapest)
             ny_time = df_portfolio.index[-1].tz_localize('America/New_York')
             hu_time = ny_time.tz_convert('Europe/Budapest')
             last_time = hu_time.strftime("%Y-%m-%d %H:%M")
             
             st.write(f"**Utolsó frissítés (gyertya zárása):** {last_time}")
-            
-            # Élő adatok megjelenítése 3 oszlopban
+        
             lc1, lc2, lc3 = st.columns(3)
             lc1.metric("Aktuális Árfolyam (Close)", f"{last_candle['Close']:.2f}")
             lc2.metric("Napi VWAP", f"{last_candle['VWAP']:.2f}")
             lc3.metric("Ázsiai Minimum (Low)", f"{last_candle['Asian_Low']:.2f}")
 
-
-            # 1. A felugró ablak designjának definiálása (alapból ad hozzá egy X gombot a jobb felső sarokba)
             @st.dialog("🔔 Figyelem: Új Piaci Szignál!")
             def felugro_ablak(signal, ar):
                 if signal == 1:
@@ -513,12 +469,8 @@ if st.sidebar.button("🚀 Szimuláció Futtatása", type="primary"):
                     st.error(f"**ELADÁS (Short)** szignál a piacon!\n\nZáróár: {ar:.2f} USD")
                 st.info("A folytatáshoz zárd be az ablakot a jobb felső X-szel.")
 
-
-            # 2. --- Élő Piaci Szignál Vizuális Értesítő ---
             utolso_signal = last_candle['Signal']
-            #utolso_signal = 1 # Ideiglenes teszteléshez vedd ki a # jelet
 
-            # Memória inicializálása, hogy ne ugorjon fel percenként
             if 'ablak_megjelent' not in st.session_state:
                 st.session_state.ablak_megjelent = False
 
@@ -537,13 +489,10 @@ if st.sidebar.button("🚀 Szimuláció Futtatása", type="primary"):
         
             else:
                 st.info("Jelenleg nincs aktív vételi vagy eladási szignál a piacon.")
-                # Ha megszűnik a szignál, nullázzuk a memóriát a következő alkalomra
                 st.session_state.ablak_megjelent = False
 
             st.divider()
 
-
-        # --- Manuális Adatfrissítés ---
         if st.button("🔄 Szimuláció frissítése", use_container_width=True):
             st.cache_data.clear()
             st.rerun()
