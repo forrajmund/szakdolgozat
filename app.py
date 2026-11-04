@@ -5,9 +5,6 @@ import plotly.graph_objects as go
 import yfinance as yf
 
 
-st.info("Utolsó adatfrissítés: 2026-11-03 16:15") # Vagy a dinamikus df.index[-1] változód
-st.success("Élő Piaci Szignál: Aktív (Vizuális mód)") # Ide jöhet a te szignál kiírató logikád
-
 # ==========================================
 # 1. OLDAL BEÁLLÍTÁSAI ÉS STÍLUS
 # ==========================================
@@ -18,6 +15,60 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+if 'visited' not in st.session_state:
+    st.session_state['visited'] = False
+
+if not st.session_state['visited']:
+    # Fejléc dizájnosan középre igazítva
+    if not st.session_state['visited']:
+        st.markdown("<h1 style='text-align: center;'>🏛️ Algoritmikus Kereskedési és Backtesting Keretrendszer</h1>", unsafe_allow_html=True)
+        st.markdown("<h3 style='text-align: center;'>👋 Üdvözöllek a Szimulációs Weboldalamon!</h3>", unsafe_allow_html=True)
+        st.markdown("<h5 style='text-align: center; color: gray;'>Szakdolgozati demonstrációs szoftver | ICT koncepciók validálása</h5>", unsafe_allow_html=True)
+    
+    st.divider()
+    
+    # Részletes, laikusbarát leírás
+    st.markdown("""
+    ### 📌 Miről szól ez a weboldal?
+    Ez a felület egy **automatizált tőzsdei szimulátor**, amely azt hivatott bemutatni, hogyan teljesítene egy előre beprogramozott kereskedési stratégia a múltbeli és aktuális piaci adatokon. A rendszer a professzionális **ICT (Inner Circle Trader)** elméletekre épülő logikát alkalmazza, és teljesen automatikusan azonosítja a lehetséges vételi (Long) és eladási (Short) pontokat.
+    
+    A cél a laikusok számára is érthetővé tenni a **"backtesting" (visszatesztelés)** folyamatát: megmutatni, hogy egy szigorú matematikai és logikai szabályrendszer alapján működő algoritmus milyen hozamot és kockázatot produkált volna egy adott történelmi időszak alatt, emberi beavatkozás nélkül.
+    """)
+    
+    # Funkciók kiemelt, formázott dobozban
+    st.info("""
+    **🛠️ Útmutató a felülethez (Mi mit csinál?)**
+    
+    *   ⚙️ **Bal oldali sáv (Szimulációs Paraméterek):** Itt te magad szabhatod testre a szimulációt. Beállíthatod, hogy mekkora kezdőtőkével és mekkora pozíciómérettel induljon a teszt.
+    *   📊 **Főoldali Teljesítmény mutatók:** Gyors és letisztult áttekintést ad az eredményekről (pl. elért nettó profit, nyerési arány, maximális tőkevisszaesés).
+    *   📈 **Interaktív Árfolyam grafikon:** Vizuálisan követheted a piac mozgását. A zöld és piros nyilak jelölik a stratégia által generált konkrét belépési és kilépési pontokat.
+    *   📋 **Kötésnapló és Visszaesés:** Részletes, táblázatos bizonyíték az összes végrehajtott tranzakcióról, beleszámítva a brókeri jutalékokat is, hogy a végeredmény minél valósághűbb legyen.
+    """)
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # Piros, nagybetűs jogi nyilatkozat
+    st.error("""
+    **🚨 JOGI ÉS KOCKÁZATI FIGYELMEZTETÉS**
+    
+    **A WEBOLDALON MEGJELENŐ ADATOK, ELEMZÉSEK ÉS EREDMÉNYEK KIZÁRÓLAG OKTATÁSI ÉS DEMONSTRÁCIÓS CÉLOKAT SZOLGÁLNAK, ÉS SEMMILYEN KÖRÜLMÉNYEK KÖZÖTT NEM MINŐSÜLNEK PÉNZÜGYI, BEFEKTETÉSI VAGY KERESKEDÉSI TANÁCSADÁSNAK!** 
+    
+    A MÚLTBELI TELJESÍTMÉNY NEM GARANCIA A JÖVŐBELI EREDMÉNYEKRE. A TŐZSDEI HATÁRIDŐS (FUTURES) KERESKEDÉS KIFEJEZETTEN KOCKÁZATOS, ÉS A BEFEKTETETT TŐKE TELJES ELVESZTÉSÉVEL IS JÁRHAT. MINDENKI KIZÁRÓLAG A SAJÁT FELELŐSSÉGÉRE, A SAJÁT TŐKÉJÉT KOCKÁZTATVA HOZ BEFEKTETÉSI DÖNTÉSEKET.
+    """)
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # Gomb középre igazítása oszlopokkal a szebb dizájn érdekében
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if st.button("Tudomásul vettem / Tovább a szimulációhoz", use_container_width=True, type="primary"):
+            st.session_state['visited'] = True
+            st.rerun()
+            
+    st.stop()
+
+    
+    st.success("Élő Piaci Szignál: Aktív (Vizuális mód)") # Ide jöhet a te szignál kiírató logikád
 # ==========================================
 # 2. ÜZLETI LOGIKA (OSZTÁLYOK)
 # ==========================================
@@ -92,13 +143,24 @@ def load_and_prepare_data(ticker):
 # ==========================================
 # 4. WEBOLDAL FELÜLET (UI)
 # ==========================================
-st.title("🏛️ Algoritmikus Kereskedési és Backtesting Keretrendszer")
-st.markdown("Szakdolgozati demonstrációs szoftver | **ICT (Inner Circle Trader) koncepciók validálása határidős piacokon**")
+# Két oszlop a fejlécnek: balra megy a cím, jobbra tartjuk a helyet a gombnak
+col_title, col_dict = st.columns([5, 1])
+
+with col_title:
+    st.title("🏛️ Algoritmikus Kereskedési és Backtesting Keretrendszer")
+    st.markdown("Szakdolgozati demonstrációs szoftver | **ICT (Inner Circle Trader) koncepciók validálása határidős piacokon**")
+
+dict_placeholder = col_dict.empty() # Ez a láthatatlan doboz foglalja le a helyet a jobb felső sarokban!
+
 st.divider()
 
 # Oldalsáv (Sidebar)
 st.sidebar.header("⚙️ Szimulációs Paraméterek")
-ticker = st.sidebar.text_input("Instrumentum (Ticker)", value="MNQ=F")
+# A felhasználó csak egy érthető, nem átírható szöveget lát:
+st.sidebar.text_input("Kereskedett Eszköz", value="Micro Nasdaq-100 (Tőzsdei Index)", disabled=True)
+
+# A háttérkód és a Yahoo Finance lekérés számára fixen megadjuk a tikert:
+ticker = "MNQ=F"
 kezdoto = st.sidebar.number_input("Kezdőtőke (USD)", min_value=1000.0, value=10000.0, step=1000.0)
 
 quantity = st.sidebar.number_input("Kontraktus mennyiség (db)", min_value=1, value=10, step=1)
@@ -141,6 +203,40 @@ if st.sidebar.button("🚀 Szimuláció Futtatása", type="primary"):
         final_equity = df_portfolio['Equity'].iloc[-1]
         net_profit = final_equity - kezdoto
         roi = (net_profit / kezdoto) * 100
+
+       
+        with dict_placeholder:
+            with st.popover("📖 Fogalomtár"):
+                st.markdown("""
+                ### 📈 Tőzsdei és Backtesting Alapfogalmak
+                * **Backtesting (Visszatesztelés):** Egy kereskedési stratégia múltbeli piaci adatokon történő tesztelése, hogy lássuk, hogyan teljesített volna élesben.
+                * **Commission (Jutalék):** A brókercég által a tranzakciókért felszámolt díj. A szimuláció ezt is beleszámolhatja a valósághű eredményekért.
+                * **Drawdown (Visszaesés):** A tőke maximális százalékos csökkenése egy adott időszak alatt, a legmagasabb elért ponttól számítva. A stratégia kockázatosságát mutatja.
+                * **Equity (Egyenleg):** A kereskedési számla aktuális, valós idejű egyenlege.
+                * **Long (Vétel):** Pozíció nyitása az árfolyam emelkedésére számítva. Profitot akkor termel, ha az ár felfelé mozog.
+                * **Pip / Pont:** A minimális ármozgás mértékegysége a tőzsdén.
+                * **Profit Factor (Profit Tényező):** A bruttó nyereség és a bruttó veszteség aránya. Ha 1 felett van, a stratégia nyereséges.
+                * **Sharpe-ráta:** A befektetés kockázattal korrigált hozamát méri. Minél magasabb, annál jobb (az 1 feletti érték már jónak számít).
+                * **Short (Eladás):** Pozíció nyitása az árfolyam csökkenésére számítva (shortolás). Profitot akkor termel, ha az árfolyam esik.
+                * **Slippage (Csúszás):** A különbség a várt ár és a tényleges végrehajtási ár között, ami a piac gyors mozgása miatt alakulhat ki.
+                * **Stop Loss (SL - Veszteségvágó):** Egy előre beállított árszint, ahol a rendszer automatikusan lezárja a pozíciót, hogy megakadályozza a további veszteségeket.
+                * **Take Profit (TP - Célár):** Egy előre beállított árszint, ahol a rendszer automatikusan lezárja a pozíciót, realizálva az elért nyereséget.
+                * **Ticker (pl. MNQ=F):** A tőzsdei termék egyedi azonosító kódja. Az MNQ=F a Micro E-mini Nasdaq-100 indexet jelöli a határidős piacon.
+                * **Win Rate (Nyerési arány):** A nyereséggel zárult tranzakciók aránya az összes tranzakcióhoz képest.
+                
+                ---
+                
+                ### 🏛️ ICT / SMC (Intézményi) Fogalmak
+                * **BOS (Break of Structure):** Piaci struktúratörés. A trend folytatódását jelzi egy korábbi csúcs vagy mélypont áttörésével.
+                * **BSL / SSL (Buy / Sell Side Liquidity):** Vételi és eladási likviditás. Olyan árszintek (korábbi csúcsok és mélypontok), ahol sok lakossági megbízás (Stop Loss) halmozódik fel.
+                * **CHoCH (Change of Character):** Karakterváltás. Az első komolyabb jele annak, hogy a jelenlegi trend megfordulhat.
+                * **Displacement (Elmozdulás):** Erőteljes, nagy gyertyákkal történő ármozgás, amely gyakran intézményi beavatkozásra utal, és FVG-ket hagy maga után.
+                * **FVG (Fair Value Gap - Méltányos érték rés):** Jelentős, hirtelen árfolyam-elmozdulás után keletkező űr a grafikonon, amelyet a piac a későbbiekben gyakran hajlamos "betölteni".
+                * **ICT / SMC (Inner Circle Trader / Smart Money Concepts):** Intézményi kereskedési módszertanok, amelyek a nagy szereplők ("okos pénz") feltételezett piaci mozgásait próbálják lekövetni.
+                * **Killzone:** Konkrét időszakok a nap folyamán (pl. London vagy New York nyitás), amikor a legnagyobb a piaci volumen és a legkiszámíthatóbbak az intézményi mozgások.
+                * **OB (Order Block - Megbízási blokk):** Egy olyan zóna (gyertya), ahol a nagy intézményi szereplők korábban jelentős mennyiségű pozíciót építettek ki.
+                * **OTE (Optimal Trade Entry):** Optimális belépési pont. A Fibonacci szintek alapján (általában 62% és 79% között) meghatározott ideális zóna a pozíciónyitásra.
+                """)
         
         rolling_max = df_portfolio['Equity'].cummax()
         drawdown = (df_portfolio['Equity'] - rolling_max) / rolling_max
@@ -448,7 +544,7 @@ if st.sidebar.button("🚀 Szimuláció Futtatása", type="primary"):
 
 
         # --- Manuális Adatfrissítés ---
-        if st.button("🔄 Adatok frissítése", use_container_width=True):
+        if st.button("🔄 Szimuláció frissítése", use_container_width=True):
             st.cache_data.clear()
             st.rerun()
 
