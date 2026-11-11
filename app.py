@@ -17,7 +17,7 @@ if 'visited' not in st.session_state:
 
 if not st.session_state['visited']:
     if not st.session_state['visited']:
-        st.markdown("<h1 style='text-align: center;'>🏛️ Algoritmikus Kereskedési és Backtesting Keretrendszer</h1>", unsafe_allow_html=True)
+        st.markdown("<h1 style='text-align: center;'>🏛️ Tőkepiaci kereskedési stratégiák elemzése és validálása Python-alapú backtesting keretrendszer segítségével</h1>", unsafe_allow_html=True)
         st.markdown("<h3 style='text-align: center;'>👋 Üdvözöllek a Szimulációs Weboldalamon!</h3>", unsafe_allow_html=True)
         st.markdown("<h5 style='text-align: center; color: gray;'>Szakdolgozati demonstrációs szoftver | ICT koncepciók validálása</h5>", unsafe_allow_html=True)
     
